@@ -22,10 +22,11 @@ def listar_clientes(request):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-    class ClientesView(ListCreateAPIView):
-        queryset = Cliente.objects.all()
+class ClientesView(ListCreateAPIView):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
 
-    class ClientesDetailView(RetrieveUpdateDestroyAPIView):
-        queryset = Cliente.objects.all()
-        serializer_class = ClienteSerializer
-        
+class ClientesDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    

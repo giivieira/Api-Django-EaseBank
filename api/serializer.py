@@ -3,8 +3,11 @@
 from rest_framework import serializers
 from .models import Cliente
 
+
 class ClienteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cliente
-        fields = ['id', 'nome', 'cidade']
-
+        fields = ['id', 'nome', 'email', 'cpf', 'nascimento',
+        'telefone', 'rg', 'ruaResidencia', 'numeroResidencia', 
+        'bairroResidencia','cepResidencia', 'estadoResidencia',
+        'cidadeResidencia']
