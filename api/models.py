@@ -1,38 +1,64 @@
+# from django.db import models
+
+# class Cliente(models.Model):
+#     nome = models.CharField(max_length=255)
+#     cidade = models.CharField(max_length=255)
+
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    BaseUserManager,
+    BaseUserManager, 
     PermissionsMixin
 )
+from django.utils import timezone
+from validate_docbr import CPF
 
 
-#Criando os campos que devem ser preenchidos para criar a conta do usuário
+class UserManager(BaseUserManager):
+    
+    def criar_usuario(self, cpf, password=None, **extra_fields):
+        if not cpf:
+            raise ValueError("O usuário precisa inserir um CPF")
 
-#max_length -> tamanho máximo do elemento (caracteres)
-#Unique = True -> não permite que o dado se repita
+        cpf = ''.join(filter(str.isdigit, cpf))
 
-class Cliente(models.Model):
-    nome = models.CharField(max_length=255, null=True)
-    email = models.CharField(max_length=255, unique=True)
-    cpf = models.CharField(max_length=11, unique=True)
-    nascimento = models.DateField(null=True)
-    telefone = models.CharField(max_length=11, unique=True)
-    rg = models.CharField(max_length=11, unique=True)
-    ruaResidencia = models.CharField(max_length=255)
-    numeroResidencia = models.CharField(max_length=255)
-    bairroResidencia = models.CharField(max_length=255)
-    cepResidencia = models.IntegerField()
-    estadoResidencia = models.CharField(max_length=255)
-    cidadeResidencia = models.CharField(max_length=255)
+        cpf_validator = CPF()
+        if not cpf_validator.validate(cpf):
+            raise ValueError("CPF inválido")
 
-
-    #Cria, salva e retorna um novo usuário
-    class UserManager(BaseUserManager):
-        def create_user(self, email, password=None, **extra_fields):
-            if not email:
-                raise ValueError("O usuário precisa ter um email")
+        cliente = self.model(cpf=cpf, **extra_fields)
+        cliente.set_password(password)
+        cliente.save()
         
-            user = self.model(email=self.normalize_email(email), **extra_fields)
-            user.set_password(password)
-            user.save()
-            return user
+        return cliente
+
+    def create_superuser(self, cpf, password):
+        
+        cliente = self.criar_usuario(cpf, password)
+        cliente.is_staff = True
+        cliente.is_superuser = True
+        cliente.save(using=self.db)
+        
+        return cliente
+    
+        
+class Cliente(AbstractBaseUser, PermissionsMixin):
+
+    first_name = models.CharField(max_length=255, unique=False)
+    last_name = models.CharField(max_length=255, unique=False)
+    password = models.CharField(max_length=50)
+    last_login = models.DateTimeField(blank=True, null=True, verbose_name='last login')
+    is_superuser = models.BooleanField(default=False, verbose_name='superuser status')
+    telefone = models.CharField(max_length=11, unique=False) 
+    cpf = models.CharField(max_length=11, unique=True, null=False)
+    is_staff = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_active = models.BooleanField(default=True)
+    email = models.EmailField(max_length=255, unique=True)
+    objects = UserManager() 
+    USERNAME_FIELD = 'cpf'
+
+    def __str__(self) -> str:
+        return f'{self.first_name} {self.last_name}'    
+    
+        

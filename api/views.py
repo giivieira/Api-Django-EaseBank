@@ -29,4 +29,4 @@ class ClientesView(ListCreateAPIView):
 class ClientesDetailView(RetrieveUpdateDestroyAPIView):
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
-    
+        
