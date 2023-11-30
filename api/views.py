@@ -1,11 +1,11 @@
 # Recebe aquisições da API
 
-from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticated
 from .models import *
 from .serializer import *
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework import generics
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets
@@ -13,20 +13,22 @@ from django.http import HttpResponseBadRequest
 from rest_framework_simplejwt.tokens import AccessToken
 import decimal
 from django.db.models import Q
+from rest_framework_simplejwt import authentication as authenticationJWT
+import random
 
-@api_view(['GET', 'POST'])
-def listar_clientes(request):
-    if request.method == 'GET':
-        queryset = Cliente.objects.all()
-        serializer = ClienteSerializer(queryset, many=True)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = ClienteSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(['GET', 'POST'])
+# def listar_clientes(request):
+#     if request.method == 'GET':
+#         queryset = Cliente.objects.all()
+#         serializer = ClienteSerializer(queryset, many=True)
+#         return Response(serializer.data)
+#     elif request.method == 'POST':
+#         serializer = ClienteSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         else:
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 @api_view(['GET', 'POST'])
 def exibir_conta(request):
@@ -50,20 +52,50 @@ def get_id(request):
 
 
 
-class ClientesView(ListCreateAPIView):
-    queryset = Cliente.objects.all()
-    serializer_class = ClienteSerializer
+# class ClientesView(ListCreateAPIView):
+#     queryset = Cliente.objects.all()
+#     serializer_class = ClienteSerializer
 
-class ClientesDetailView(RetrieveUpdateDestroyAPIView):
-    queryset = Cliente.objects.all()
-    serializer_class = ClienteSerializer
+# class ClientesDetailView(RetrieveUpdateDestroyAPIView):
+#     queryset = Cliente.objects.all()
+#     serializer_class = ClienteSerializer
         
-class ContaView(ListCreateAPIView):
+class ContaView(viewsets.ModelViewSet):
     queryset = Conta.objects.all()
     serializer_class = ContaSerializer
+    authentication_classes = [authenticationJWT.JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            agencia = '0001'
+            numero = ''
+            for n in range(8):
+                numero += str(random.randint(0, 9))
 
-class CartaoView(ListCreateAPIView):
-    queryset = Conta.objects.all()
+            conta = Conta(
+                cliente=self.request.user,
+                numero=numero,
+                agencia=agencia,
+                saldo=0,
+                chavePix=serializer.validated_data.get("chavePix"),
+                limite=1000,
+                digito=1
+            )
+
+            conta.save()
+
+            return Response({"message": "created"},
+                            status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+class CartaoView(generics.ListCreateAPIView):
+    authentication_classes = [authenticationJWT.JWTAuthentication]
+    permission_classes = [IsAuthenticated]
+    queryset = Cartoes.objects.all()
     serializer_class = CartoesSerializer
 
 
