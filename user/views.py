@@ -10,6 +10,8 @@ from rest_framework_simplejwt import authentication as authenticationJWT
 from user.serializers import UserSerializer
 from user.permissions import IsCreationOrIsAuthenticated
 from rest_framework.decorators import action
+from datetime import timedelta
+from django.utils import timezone
 
 
 class CreateUserView(generics.CreateAPIView):
@@ -24,8 +26,10 @@ class ManagerUserAPiView(generics.RetrieveUpdateAPIView, generics.CreateAPIView)
     permission_classes = [IsCreationOrIsAuthenticated]
 
     def get_object(self):
-        """Retrieve and return a user."""
-        return self.request.user
+        """Retrieve and return the authenticated user."""
+        user = self.request.user
+        created_time = user.created_at
+        current_time = timezone.now()
 
     @action(methods=['POST'], detail=True, url_path='upload-image')
     def upload_image(self, request, pk=None):

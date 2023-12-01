@@ -113,10 +113,10 @@ class CartoesListarDetalhar(viewsets.ModelViewSet):
         tipo = request.data['tipo']        
 
         if tipo == 'd' and Cartoes.objects.filter(conta=conta, tipo='d').exists():
-            return HttpResponseBadRequest("Já existe um cartão do tipo 'debito' associado a esta conta.")
+            return HttpResponseBadRequest("Já existe um cartão do tipo 'débito' associado a esta conta.")
         
         if tipo == 'c' and Cartoes.objects.filter(conta=conta, tipo='c').count() >= 5:
-            return HttpResponseBadRequest("Limite máximo de cartões do tipo 'credito' atingido para esta conta.")
+            return HttpResponseBadRequest("Limite máximo de cartões do tipo 'crédito' atingido para esta conta.")
         
         # if tipo == 'b' and Cartoes.objects.filter(conta=conta, tipo='b').exists():
         #     return HttpResponseBadRequest("Limite máximo de cartões do tipo 'crebito' atingido para esta conta.")
