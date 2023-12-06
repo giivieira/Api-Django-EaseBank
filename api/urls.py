@@ -1,11 +1,12 @@
 from django.urls import path, include
-from . import views 
-from rest_framework.routers import DefaultRouter
+from api import views 
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
 from api import views
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register('contas', views.ContaView)
+router.register('movimentacao', views.MovimentacaoViewSet)
 
 app_name = 'api'
 

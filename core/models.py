@@ -33,7 +33,7 @@ class Conta(models.Model):
     )
 
     def __str__(self) -> str:
-        return self.cliente.nome
+        return self.cliente.first_name
 
 
 class Cartoes(models.Model):
@@ -54,20 +54,11 @@ class Cartoes(models.Model):
 
     
 class Movimentacao(models.Model):
-    PIX = 'p'
-    TRANSFERENCIA = 't'
-    DEPOSITO = 'd'
-    TIPOS = (
-        (PIX, "PIX"),
-        (TRANSFERENCIA, "Transferência"),
-        (DEPOSITO, "Depósito")
-    )
     remetente = models.ForeignKey(Conta, on_delete=models.CASCADE, related_name="remetente")
     remetenteNome = models.CharField(max_length=100)
     destinatario = models.ForeignKey(Conta, on_delete=models.CASCADE, related_name="destinatario")
     destinatarioNome = models.CharField(max_length=100)
     chavePix = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=1, choices=TIPOS) # PIX TRANFERENCIA PAGAMENTO
     valor = models.DecimalField(max_digits=10, decimal_places=2, default="p")
     data = models.DateTimeField(auto_now_add=True)
     descricao = models.CharField(max_length=100)
