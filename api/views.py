@@ -233,7 +233,7 @@ class MovimentacaoViewSet(viewsets.ViewSet):
             conta_destino = Conta.objects.filter(id=destinatario.id).first()
             print("Conta destino: ", conta_destino)
             if remetente and conta_destino:
-                if remetente.saldo < decimal.Decimal(valor):
+                if remetente.saldo >= decimal.Decimal(valor):
                     movimentacao = Movimentacao.objects.create(
                         destinatario=destinatario,
                         destinatarioNome=destinatarioNome,
