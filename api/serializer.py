@@ -25,6 +25,12 @@ class MovimentacaoSerializer(serializers.ModelSerializer):
         model = Movimentacao
         fields = ('id','remetente','remetenteNome','destinatario','destinatarioNome','chavePix','valor','data','descricao',)
 
+class MovimentacaoPost(serializers.ModelSerializer):
+    valor = serializers.DecimalField(max_digits=10, decimal_places=2)
+    class Meta:
+        model = Movimentacao
+        fields = ('destinatario', 'chavePix','valor','descricao')
+
 
 
 class CartoesSerializer(serializers.ModelSerializer):

@@ -14,7 +14,7 @@ from django.db.models import Q
 from rest_framework_simplejwt import authentication as authenticationJWT
 import random
 from rest_framework.decorators import action
-from api.serializer import MovimentacaoSerializer
+from api.serializer import MovimentacaoSerializer, MovimentacaoPost
 
 # @api_view(['GET', 'POST'])
 # def listar_clientes(request):
@@ -212,45 +212,43 @@ class MovimentacaoViewSet(viewsets.ViewSet):
         
     @action(detail=False, methods=['post'], url_path="fazer")
     def transferencia(self, request):
-        serializer = MovimentacaoSerializer(data=request.data)
+        serializer = MovimentacaoPost(data=request.data)
         auth_user = request.user
 
         if serializer.is_valid():
-            destinatario = serializer.validated_data.get('destinatario')
-            destinatarioNome = serializer.validated_data.get('destinatarioNome')
-            remetente = serializer.validated_data.get('remetente')
-            remetenteNome = serializer.validated_data.get('remetenteNome')
-            valor = serializer.validated_data.get('valor')
-            descricao = serializer.validated_data.get('descricao')
-            cartao = serializer.validated_data.get('cartao')
-            chavePix = serializer.validated_data.get('chavePix')
-            data = serializer.validated_data.get('data')
-            
+            destinatario = request.data.get('destinatario')
+            valor = request.data.get('valor')
+            descricao = request.data.get('descricao')
+            chavePix = request.data.get('chavePix')            
 
-
+            print(destinatario)
             remetente = Conta.objects.filter(cliente=auth_user).first()
-            print("Conta origem: ", remetente)
-            conta_destino = Conta.objects.filter(id=destinatario.id).first()
+            print("Conta origem: ", remetente.id)
+            conta_destino = Conta.objects.filter(id=destinatario).first()
             print("Conta destino: ", conta_destino)
+            print("Conta destino: ", conta_destino.cliente)
+
             if remetente and conta_destino:
                 if remetente.saldo >= decimal.Decimal(valor):
-                    movimentacao = Movimentacao.objects.create(
-                        destinatario=destinatario,
-                        destinatarioNome=destinatarioNome,
-                        remetente=remetente,
-                        remetenteNome=remetenteNome,
-                        valor=valor,
-                        descricao=descricao,
-                        chavePix=chavePix,
-                        data = data,
-                        # cartao_id=cartao.id 
-                    )
+                    movimentacao = {
+                        "destinatario":conta_destino.id,
+                        "destinatarioNome":conta_destino.cliente.first_name,
+                        "remetente":remetente.id,
+                        "remetenteNome":remetente.cliente.first_name,
+                        "valor":valor,
+                        "descricao":descricao,
+                        "chavePix":chavePix,
+                    }
 
                     remetente.saldo -= valor
-                    destinatario.saldo += valor
+                    conta_destino.saldo += valor
 
                     remetente.save()
-                    destinatario.save()
+                    conta_destino.save()
+
+                    serializer = MovimentacaoSerializer(data=movimentacao)
+                    serializer.is_valid(raise_exception=True)
+                    serializer.save()
 
                     return Response({"message": "Transação realizada com sucesso"}, status=status.HTTP_201_CREATED)
                 else:
